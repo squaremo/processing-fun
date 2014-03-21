@@ -1,24 +1,23 @@
 
-int HEIGHT = 30;
-int WIDTH = 30;
+int HEIGHT = 200;
+int WIDTH = 200;
 float SCALE_CAMERA_Z = 0.5;
-float DAMPING = 0.99;
+float DAMPING = 0.999;
 int MAX_HEIGHT = 255;
 int SCALE_HEIGHT_TO_255 = 2 * MAX_HEIGHT / 255;
-int SCALE_SCREEN_TO_WORLD = 512 / WIDTH;
 
 int[][] last_heights = new int[WIDTH][HEIGHT];
 int[][] next_heights = new int[WIDTH][HEIGHT];
 
 void setup() {
-  frameRate(10);
-  size(512, 512, P3D);
+  frameRate(30);
+  size(1024, 768, P3D);
   zero_field(last_heights); zero_field(next_heights);
 }
 
 void draw() {
   update_fields();
-  draw_field_wireframe(next_heights);
+  draw_field_solid(next_heights);
   draw_field_greyscale(next_heights);
   int[][] temp = last_heights;
   last_heights = next_heights;
@@ -26,7 +25,7 @@ void draw() {
 }
 
 void mouseDragged() {
-  next_heights[mouseX / SCALE_SCREEN_TO_WORLD][mouseY / SCALE_SCREEN_TO_WORLD] = -MAX_HEIGHT;
+  next_heights[int(WIDTH * mouseX / width)][int(HEIGHT * mouseY / height)] = -MAX_HEIGHT;
 }
 
 // ============
@@ -74,41 +73,42 @@ void draw_field_wireframe(int[][] heights) {
   background(0,0,0);
   stroke(200, 200, 200);
   noLights(); noFill();
-  //perspective();
+  set_view();
+  draw_mesh(heights);
+}
+
+void set_view() {
   float cameraZ = ((HEIGHT/2.0) / tan(PI*60.0/360.0));
   perspective(PI/3.0, WIDTH/HEIGHT, cameraZ / 10, cameraZ * 10);
-  camera(WIDTH / 2, HEIGHT / 2, (HEIGHT/2.0) / tan(PI*30.0 / 180.0),
+  camera(WIDTH / 2, HEIGHT * 1.5, (HEIGHT/2.0) / tan(PI*30.0 / 180.0),
          WIDTH / 2, HEIGHT / 2, 0,
          0, 1, 0);
-  //camera();
-//  box(WIDTH, HEIGHT, 10);
-  draw_mesh(heights);
+
 }
 
 void draw_field_solid(int[][] heights) {
   background(0,0,0);
   noStroke(); //fill(200, 200, 200);
-  //specular(150,150,150);
+  specular(255,255,255);
+  shininess(0.2);
   //lights();
-  pointLight(0,0,200, 0, 0, 500);
-  //emissive(100,100,100);
-  shininess(0.5);
-  //perspective();
-//  camera(WIDTH / 2, HEIGHT / 2, CAMERA_Z,
-//         WIDTH / 2, HEIGHT / 2, 0,
-//         0, 1, 0);
+  pointLight(200,200,255, 40, 40, 40);
+  //directionalLight(100, 100, 100, 1, 0.5, -1);
+  emissive(50,50,50);
+  set_view();
   draw_mesh(heights);
 }
 
 void draw_mesh(int[][] heights) {
   int i; int j;
+  float scale = float(MAX_HEIGHT / 4);
   for (j = 0; j < HEIGHT - 1; j++) {
     beginShape(TRIANGLE_STRIP);
-    for (i = 0; i < WIDTH - 1; i++) {
-      vertex(i, j, heights[i][j] / MAX_HEIGHT);
-      vertex(i, j+1, heights[i][j+1] / MAX_HEIGHT);
-      vertex(i+1, j, heights[i+1][j] / MAX_HEIGHT);
-      vertex(i+1, j+1, heights[i+1][j+1] / MAX_HEIGHT);
+    for (i = 0; i < WIDTH - 1; i+=2) {
+      vertex(i, j, heights[i][j] / scale);
+      vertex(i, j+1, heights[i][j+1] / scale);
+      vertex(i+1, j, heights[i+1][j] / scale);
+      vertex(i+1, j+1, heights[i+1][j+1] / scale);
     }
     endShape();
   }
