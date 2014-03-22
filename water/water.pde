@@ -1,8 +1,8 @@
 
-int HEIGHT = 200;
-int WIDTH = 200;
+int HEIGHT = 100;
+int WIDTH = 100;
 float SCALE_CAMERA_Z = 0.5;
-float DAMPING = 0.999;
+float DAMPING = 0.99;
 int MAX_HEIGHT = 255;
 int SCALE_HEIGHT_TO_255 = 2 * MAX_HEIGHT / 255;
 
@@ -16,7 +16,7 @@ void setup() {
 }
 
 void draw() {
-  update_fields();
+  update_fields_4();
   draw_field_solid(next_heights);
   draw_field_greyscale(next_heights);
   int[][] temp = last_heights;
@@ -30,16 +30,35 @@ void mouseDragged() {
 
 // ============
 
-
-void update_fields() {
+void update_fields_4() {
   int i; int j;
   for (i = 1; i < WIDTH - 1; i++) {
     for (j = 1; j < HEIGHT - 1; j++) {
       next_heights[i][j] = int(
-        (last_heights[i - 1][j] +
-         last_heights[i + 1][j] +
-         last_heights[i][j - 1] +
-         last_heights[i][j + 1]) / 2 - next_heights[i][j]);
+        (last_heights[i-1][j] +
+         last_heights[i+1][j] +
+         last_heights[i][j-1] +
+         last_heights[i][j+1]) / 2
+         - next_heights[i][j]);
+      next_heights[i][j] *= DAMPING;
+    }
+  }
+}
+
+void update_fields_8() {
+  int i; int j;
+  for (i = 1; i < WIDTH - 1; i++) {
+    for (j = 1; j < HEIGHT - 1; j++) {
+      next_heights[i][j] = int(
+        (last_heights[i-1][j] +
+         last_heights[i+1][j] +
+         last_heights[i][j-1] +
+         last_heights[i][j+1]) / 4 +
+        (last_heights[i+1][j+1] +
+         last_heights[i+1][j-1] +
+         last_heights[i-1][j-1] +
+         last_heights[i-1][j+1]) / 6
+         - next_heights[i][j]);
       next_heights[i][j] *= DAMPING;
     }
   }
@@ -111,6 +130,27 @@ void draw_mesh(int[][] heights) {
       vertex(i+1, j+1, heights[i+1][j+1] / scale);
     }
     endShape();
+  }
+}
+
+void draw_mesh_fan(int[][] heights) {
+  int i; int j;
+  float scale = float(MAX_HEIGHT / 4);
+  for (i = 1; i < WIDTH-1; i+=2) {
+    for (j = 1; j < HEIGHT-1; j+=2) {
+      beginShape(TRIANGLE_FAN);
+      vertex(i, j, heights[i][j]/ scale);
+      vertex(i, j-1, heights[i][j-1] / scale);
+      vertex(i+1,j-1, heights[i+1][j-1] / scale);
+      vertex(i+1, j, heights[i+1][j] / scale);
+      vertex(i+1, j+1, heights[i+1][j+1] / scale);
+      vertex(i, j+1, heights[i][j+1] / scale);
+      vertex(i-1, j+1, heights[i-1][j+1] / scale);
+      vertex(i-1, j, heights[i-1][j] / scale);
+      vertex(i-1, j-1, heights[i-1][j-1] / scale);
+      vertex(i, j-1, heights[i][j-1] / scale);
+      endShape();
+    }
   }
 }
 
